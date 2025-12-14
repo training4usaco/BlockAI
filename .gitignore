@@ -1,0 +1,21 @@
+# --- IDE Files (The .idea folder in your screenshot) ---
+.idea/
+*.iml
+
+# --- Dependencies (The node_modules folder at the root) ---
+node_modules/
+
+# --- Build Outputs ---
+dist/
+build/
+out/
+
+# --- OS Files ---
+.DS_Store
+
+# --- PNPM / NPM Logs ---
+npm-debug.log*
+pnpm-debug.log*
+
+# --- Environment Variables ---
+.env
