@@ -9,7 +9,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
             colour: '#5b80a5',
             contents: [
                 { kind: 'block', type: 'linear' },
-                { kind: 'block', type: 'batchNorm1d' },
+                { kind: 'block', type: 'batch_norm_1d' },
             ],
         },
         {
@@ -29,7 +29,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
                 { kind: 'block', type: 'sequential' },
             ]
         },
-        
+
         { kind: 'sep' },
         
         {
@@ -43,6 +43,18 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
             colour: '#995ba5',
             name: 'Functions',
             custom: 'PROCEDURE',
+        },
+
+        { kind: 'sep' },
+
+        {
+            kind: 'category',
+            colour: '#555555',
+            name: 'Custom Code',
+            contents: [
+                { kind: 'block', type: 'custom_code' } 
+            ]
         }
+
     ],
 };

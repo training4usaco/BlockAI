@@ -6,7 +6,11 @@ settings:
 
 importers:
 
-  .: {}
+  .:
+    dependencies:
+      '@blockly/field-multilineinput':
+        specifier: ^6.0.3
+        version: 6.0.3(blockly@12.3.1)
 
   apps/client:
     dependencies:
@@ -153,6 +157,12 @@ packages:
   '@babel/types@7.28.5':
     resolution: {integrity: sha512-qQ5m48eI/MFLQ5PxQj4PFaprjyCTLI37ElWMmNs0K8Lk3dVeOdNpB3ks8jc7yM5CDmVC73eMVk/trk3fgmrUpA==}
     engines: {node: '>=6.9.0'}
+
+  '@blockly/field-multilineinput@6.0.3':
+    resolution: {integrity: sha512-xZqPRyFiXB8yoNW3wMDkQ7ZIZajlFGZ/HIo2yjsQ0P6t9vwfEQcG/1X/cZUGRakqGHnE+q5ziEg7VKYvSh+tJQ==}
+    engines: {node: '>=8.0.0'}
+    peerDependencies:
+      blockly: ^12.0.0
 
   '@csstools/color-helpers@5.1.0':
     resolution: {integrity: sha512-S11EXWJyy0Mz5SYvRmY8nJYTFFd1LCNV+7cXyAgQtOOuzb4EsgfqDufL+9esx72/eLhsRdGZwaldu/h+E4t4BA==}
@@ -2359,6 +2369,10 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
+
+  '@blockly/field-multilineinput@6.0.3(blockly@12.3.1)':
+    dependencies:
+      blockly: 12.3.1
 
   '@csstools/color-helpers@5.1.0': {}
 
