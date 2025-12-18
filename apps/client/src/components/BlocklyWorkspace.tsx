@@ -2,10 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as Blockly from 'blockly/core';
 import { pythonGenerator } from 'blockly/python';
 import '../blocks/CustomBlocks.tsx';
-import { Linear } from "../PythonLibrary/Linear.ts";
-import {Tanh} from "../PythonLibrary/Activations/Tanh.ts";
-import {BatchNorm1d} from "../PythonLibrary/BatchNorm1d.ts";
-import {ReLU} from "../PythonLibrary/Activations/ReLU.ts";
 import {toolbox} from "../toolbox.ts";
 import * as libraryBlocks from 'blockly/blocks';
 import * as En from 'blockly/msg/en';
@@ -17,21 +13,7 @@ const BlocklyWorkspace: React.FC = () => {
     const blocklyDiv = useRef<HTMLDivElement>(null);
     const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
     const [generatedCode, setGeneratedCode] = useState<string>();
-    const classesMap: Map<string, string> = new Map<string, string>([
-        ["linear", Linear],
-        ["batchNorm1d", BatchNorm1d],
-        ["tanh", Tanh],
-        ["relu", ReLU]
-    ]);
     
-    const hasBlockOfType = (blockType: string): boolean => {
-        const workspace = workspaceRef.current;
-        if (!workspace) return false;
-
-        const allBlocks = workspace.getAllBlocks(true);
-        return allBlocks.some(block => block.type === blockType);
-    };
-
     useEffect(() => {
         if (!blocklyDiv.current) return;
         
@@ -61,14 +43,9 @@ const BlocklyWorkspace: React.FC = () => {
                     'import torch\n' +
                     'import torch.nn.functional as F\n';
 
-                const classes = Array.from(classesMap.entries())
-                    .filter(([key]) => hasBlockOfType(key))
-                    .map(([_, value]) => value);
-                const classesCode = classes.join('\n');
-                
                 const generatedCode = pythonGenerator.workspaceToCode(workspaceRef.current);
                 
-                const code = importsCode + '\n' + classesCode + '\n' + generatedCode;
+                const code = importsCode + '\n' + generatedCode;
                 
                 setGeneratedCode(code);
             }
