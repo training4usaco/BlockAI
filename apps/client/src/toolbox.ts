@@ -6,7 +6,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         {
             kind: 'category',
             name: 'Layers',
-            colour: '#5b80a5',
+            colour: '#4DB6AC',
             contents: [
                 { kind: 'block', type: 'linear' },
                 { kind: 'block', type: 'batch_norm_1d' },
@@ -15,7 +15,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         {
             kind: 'category',
             name: 'Activations',
-            colour: '#5cb85c',
+            colour: '#80CBC4',
             contents: [
                 { kind: 'block', type: 'relu' },
                 { kind: 'block', type: 'tanh' },
@@ -24,9 +24,141 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         {
             kind: 'category',
             name: 'Model',
-            colour: '#0bd592',
+            colour: '#78909C',
             contents: [
                 { kind: 'block', type: 'sequential' },
+            ]
+        },
+
+        { kind: 'sep' },
+
+        {
+            kind: 'category',
+            name: 'Inputs',
+            colour: '#FF8A65',
+            contents: [
+                { kind: 'block', type: 'txt_file_input' },
+            ]
+        },
+
+        {
+            kind: 'category',
+            name: 'Data Processing',
+            colour: '#FFB74D',
+            contents: [
+                { kind: 'block', type: 'build_tokenizer' },
+                { kind: 'block', type: 'build_dataset' },
+                { kind: 'block', type: 'split_dataset' },
+            ]
+        },
+
+        { kind: 'sep' },
+        
+        {
+            kind: 'category',
+            name: 'Loops',
+            colour: '#5CA65C',
+            contents: [
+                {
+                    kind: 'block',
+                    type: 'controls_repeat_ext',
+                    inputs: {
+                        TIMES: {
+                            shadow: {
+                                type: 'math_number',
+                                fields: { NUM: 10 },
+                            },
+                        },
+                    },
+                },
+                {
+                    kind: 'block',
+                    type: 'controls_whileUntil',
+                },
+                {
+                    kind: 'block',
+                    type: 'controls_for',
+                    inputs: {
+                        FROM: {
+                            shadow: {
+                                type: 'math_number',
+                                fields: { NUM: 1 },
+                            },
+                        },
+                        TO: {
+                            shadow: {
+                                type: 'math_number',
+                                fields: { NUM: 10 },
+                            },
+                        },
+                        BY: {
+                            shadow: {
+                                type: 'math_number',
+                                fields: { NUM: 1 },
+                            },
+                        },
+                    },
+                },
+                {
+                    kind: 'block',
+                    type: 'controls_forEach',
+                },
+                {
+                    kind: 'block',
+                    type: 'controls_flow_statements',
+                },
+            ],
+        },
+        
+        {
+            kind: 'category',
+            name: 'Logic',
+            colour: '#5C81A6',
+            contents: [
+                { kind: 'block', type: 'logic_compare' },
+                { kind: 'block', type: 'logic_operation' },
+                { kind: 'block', type: 'logic_boolean' }
+            ]
+        },
+        
+        {
+            kind: 'category',
+            name: 'Math',
+            colour: '#5C68A6',
+            contents: [
+                { kind: 'block', type: 'math_number' },
+                { kind: 'block', type: 'math_arithmetic' }
+            ]
+        },
+
+        {
+            kind: 'category',
+            name: 'Text',
+            colour: '#5CA68D',
+            contents: [
+                { kind: 'block', type: 'text' },
+                { kind: 'block', type: 'text_join' },
+                { kind: 'block', type: 'text_length' },
+                { kind: 'block', type: 'text_print' },
+                { kind: 'block', type: 'special_character' }
+            ],
+        },
+
+        {
+            kind: 'category',
+            name: 'Lists',
+            colour: '#735AA5',
+            contents: [
+                { kind: 'block', type: 'lists_create_with' },
+                { kind: 'block', type: 'lists_repeat' },
+                { kind: 'block', type: 'lists_length' },
+                { kind: 'block', type: 'lists_isEmpty' },
+                { kind: 'block', type: 'lists_indexOf' },
+                { kind: 'block', type: 'lists_getIndex' },
+                { kind: 'block', type: 'lists_setIndex' },
+                { kind: 'block', type: 'lists_getSublist' },
+                { kind: 'block', type: 'lists_split' },
+                { kind: 'block', type: 'lists_sort' }
             ]
         },
 
