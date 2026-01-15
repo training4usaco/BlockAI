@@ -37,7 +37,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
             name: 'Inputs',
             colour: '#FF8A65',
             contents: [
-                { kind: 'block', type: 'txt_file_input' },
+                { kind: 'block', type: 'lsv_input' },
             ]
         },
 
