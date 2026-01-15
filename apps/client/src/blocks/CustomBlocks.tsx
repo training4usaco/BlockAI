@@ -8,6 +8,20 @@ import {BatchNorm1d} from "../python-library/BatchNorm1d.ts";
 import {Tanh} from "../python-library/activations/Tanh.ts";
 import {ReLU} from "../python-library/activations/ReLU.ts";
 import {SplitDataset} from "../python-library/SplitDataset.ts";
+import {LSVInput} from "../python-library/input/LSVInput.ts";
+import {Workspace, WorkspaceSvg} from "blockly/core";
+
+
+function getUniqueName(workspace: Workspace, varname: string) {
+  let candidate = varname;
+  let counter = 2;
+
+  while (workspace.getVariable(candidate)) {
+    candidate = varname + counter;
+    counter++;
+  }
+  return candidate;
+}
 
 Blockly.Blocks['linear'] = {
   init: function() {
@@ -72,14 +86,26 @@ Blockly.Blocks['relu'] = {
   }
 };
 
-Blockly.Blocks['txt_file_input'] = {
+Blockly.Blocks['lsv_input'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField('read text file')
+        .appendField('Load data from LSV file')
     this.appendDummyInput()
         .appendField(new FieldFilePicker("click_to_select_lsv.txt"), 'FILENAME');
-    this.setOutput(true);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
     this.setColour('#FF8A65');
+  },
+
+  onchange: function(event: any) {
+    if (!this.workspace || this.workspace.isFlyout) return;
+
+    if (event.type === Blockly.Events.BLOCK_CREATE && event.blockId === this.id) {
+      if(!this.data) {
+        this.data = getUniqueName(this.workspace, "lsv_input");
+        this.workspace.createVariable(this.data);
+      }
+    }
   }
 }
 
@@ -117,26 +143,37 @@ Blockly.Blocks['custom_code'] = {
 
 Blockly.Blocks['build_tokenizer'] = {
   init: function() {
+    this.setInputsInline(true);
     this.appendValueInput("DATA")
         .setCheck("Array") 
         .appendField("build tokenizer from data");
-
-    this.setOutput(true, "Tokenizer"); 
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
     this.setColour('#FFB74D');
     this.setTooltip("Creates a Character Tokenizer object.");
+  },
+
+  onchange: function(event: any) {
+    if (!this.workspace || this.workspace.isFlyout) return;
+
+    if (event.type === Blockly.Events.BLOCK_CREATE && event.blockId === this.id) {
+      if(!this.data) {
+        this.data = getUniqueName(this.workspace, "tokenizer");
+        this.workspace.createVariable(this.data);
+      }
+    }
   }
 };
 
 Blockly.Blocks['build_dataset'] = {
   init: function() {
-    this.appendDummyInput()
-        .appendField("build window dataset");
+    this.setInputsInline(true);
 
     this.appendValueInput("TOKENIZER")
-        .appendField("using tokenizer");
+        .appendField("build window dataset using tokenizer");
 
     this.appendValueInput("BLOCK_SIZE")
-        .appendField("block size (context)");
+        .appendField("and context length");
 
     this.setOutput(true, "Array");
     this.setColour('#FFB74D');
@@ -283,12 +320,11 @@ pythonGenerator.forBlock['sequential'] = function(block: Blockly.Block, generato
       ']';
 };
 
-pythonGenerator.forBlock['txt_file_input'] = function(block: any) {
-  const filename = block.getFieldValue('FILENAME'); 
+pythonGenerator.forBlock['lsv_input'] = function(block: any) {
+  const varname = block.data ?? 'lsv_input'; 
+  const filename = block.getFieldValue('FILENAME');
 
-  const code = `open('${filename}', 'r').read()\n`;
-
-  return [code, 0];
+  return LSVInput(varname, filename);
 };
 
 pythonGenerator.forBlock['custom_code'] = function(block: Blockly.Block) {
@@ -296,6 +332,7 @@ pythonGenerator.forBlock['custom_code'] = function(block: Blockly.Block) {
 }
 
 pythonGenerator.forBlock['build_tokenizer'] = function(block: any) {
+  const varname = block.data ?? 'tokenizer';
   const words = pythonGenerator.valueToCode(block, 'DATA', 0) || '[]';
 
   const className = pythonGenerator.provideFunction_(
@@ -303,9 +340,7 @@ pythonGenerator.forBlock['build_tokenizer'] = function(block: any) {
       CharTokenizer
   );
 
-  const code = `${className}(${words})\n`;
-
-  return [code, 0];
+  return `${varname} = ${className}(${words})\n`;
 };
 
 pythonGenerator.forBlock['build_dataset'] = function(block: any) {
