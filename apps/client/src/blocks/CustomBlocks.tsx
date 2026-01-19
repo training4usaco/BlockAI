@@ -40,12 +40,6 @@ Blockly.Blocks['linear'] = {
     this.setNextStatement(true);
     this.appendDummyInput()
         .appendField('Linear Layer');
-    this.appendValueInput('IN_FEATURES') 
-        .setCheck('Number')           
-        .appendField('In Features');
-    this.appendValueInput('OUT_FEATURES')
-        .setCheck('Number')
-        .appendField('Out Features');
     this.setColour('#4DB6AC');
     this.setTooltip('Applies a linear transformation: y = xW^T + b');
   }
@@ -63,11 +57,32 @@ Blockly.Blocks['batch_norm_1d'] = {
 
 Blockly.Blocks['sequential'] = {
   init: function() {
-    this.setColour('#78909C'); 
+    this.setColour('#78909C');
+    
+    this.appendDummyInput().appendField('Sequential Model');
 
+    this.appendValueInput('BLOCK_SIZE')
+        .setCheck('Number')
+        .appendField('context length');
+    
+    this.appendValueInput('REPS')
+        .setCheck('Number')
+        .appendField('number of repetitions')
+    
+    this.appendValueInput('NUM_HIDDEN')
+        .setCheck('Number')
+        .appendField('number of hidden layer nodes');
+    
+    this.appendValueInput('EMB_DIM')
+        .setCheck('Number')
+        .appendField('embedding dimension');
+    
+    this.appendValueInput("TOKENIZER")
+        .appendField("tokenizer");
+    
     this.appendStatementInput('LAYERS')
         .setCheck(['Layers', 'Activations'])
-        .appendField('Sequential Model');
+        .appendField('layers');
 
     this.setPreviousStatement(true);
     this.setNextStatement(true); 
@@ -292,16 +307,13 @@ Blockly.Blocks['split_dataset'] = {
   },
 };
 
-pythonGenerator.forBlock['linear'] = function(block: Blockly.Block) {
-  const in_feats = pythonGenerator.valueToCode(block, 'IN_FEATURES', 0) || '10';
-  const out_feats = pythonGenerator.valueToCode(block, 'OUT_FEATURES', 0) || '20';
-
+pythonGenerator.forBlock['linear'] = function(_block: Blockly.Block) {
   const className = pythonGenerator.provideFunction_(
       'Linear',
      Linear 
   );
 
-  return `${className}(${in_feats}, ${out_feats})\n`;
+  return `${className}(100, 100)\n`;
 };
 
 pythonGenerator.forBlock['batch_norm_1d'] = function(_block: Blockly.Block) {
@@ -309,7 +321,7 @@ pythonGenerator.forBlock['batch_norm_1d'] = function(_block: Blockly.Block) {
       'BatchNorm1d',
       BatchNorm1d
   );
-  return `${className}()\n`;
+  return `${className}(100)`;
 };
 
 pythonGenerator.forBlock['tanh'] = function(_block: Blockly.Block) {
@@ -317,7 +329,7 @@ pythonGenerator.forBlock['tanh'] = function(_block: Blockly.Block) {
       'Tanh',
      Tanh 
   );
-  return `${className}()\n`;
+  return `${className}()`;
 };
 
 pythonGenerator.forBlock['relu'] = function(_block: Blockly.Block) {
@@ -325,23 +337,72 @@ pythonGenerator.forBlock['relu'] = function(_block: Blockly.Block) {
       'ReLU',
       ReLU
   );
-  return `${className}()\n`;
+  return `${className}()`;
 };
 
-pythonGenerator.forBlock['sequential'] = function(block: Blockly.Block, generator) {
-  const varname = block.data ?? 'sequential_model';
-  console.log(block.data);
-  const statements = generator.statementToCode(block, 'LAYERS')
-      .trim()
-      .split('\n')
-      .map(line => line.trim())
-      .join(', ');
+pythonGenerator.forBlock['sequential'] = function(block: Blockly.Block) {
+  const linearClassName = pythonGenerator.provideFunction_(
+      'Linear',
+      Linear
+  );
 
-  console.log(statements);
+  const batchNorm1dClassName = pythonGenerator.provideFunction_(
+      'BatchNorm1d',
+      BatchNorm1d
+  );
   
+  const blockSize = pythonGenerator.valueToCode(block, 'BLOCK_SIZE', 0) || '8';
+  const nHidden = pythonGenerator.valueToCode(block, 'NUM_HIDDEN', 0) || '200';
+  const embDim = pythonGenerator.valueToCode(block, 'EMB_DIM', 0) || '10';
+  const reps = pythonGenerator.valueToCode(block, 'REPS', 0) || '4';
+
+  const varname = block.data ?? 'sequential_model';
+  let layersCode = [];
+
+  let currentInDim = `${embDim} * ${blockSize}`;
+  
+  for(let i = 0; i < (parseInt(reps) || 1); ++i) {
+    let layerBlock = block.getInputTargetBlock('LAYERS');
+    let line = '';
+    while(layerBlock) {
+      if(layerBlock.type === 'linear') {
+        const blockCode = `${linearClassName}(${currentInDim}, ${nHidden})`;
+        line += (blockCode + ', ')
+        currentInDim = nHidden;
+      }
+      else if(layerBlock.type === 'batch_norm_1d') {
+        const blockCode = `${batchNorm1dClassName}(${currentInDim})`;
+        line += (blockCode + ', ')
+        currentInDim = nHidden;
+      }
+      else {
+        const generatorFunc = pythonGenerator.forBlock[layerBlock.type];
+        if (generatorFunc) {
+          let code = generatorFunc.call(pythonGenerator, layerBlock, pythonGenerator);
+          if(Array.isArray(code)) {
+            code = code[0];
+          }
+
+          code = code ? code.toString().trim() : '';
+
+          if(code) {
+            line += (code + ', ');
+          }
+        }
+      }
+      layerBlock = layerBlock.getNextBlock();
+    }
+    if(line) {
+      layersCode.push(line + '\n    ')
+    }
+  }
+
+  layersCode.push(`Layer(${currentInDim}, ${pythonGenerator.valueToCode(block, 'TOKENIZER', 0) || 'tokenizer'}.vocab_size)`)
+  const innerContent = layersCode.join('');
+
   return `${varname} = [\n` +
-      `    ${statements}\n` +
-      ']\n\n';
+      `    ${innerContent}\n` +
+      `]\n\n`
 };
 
 pythonGenerator.forBlock['lsv_input'] = function(block: any) {
