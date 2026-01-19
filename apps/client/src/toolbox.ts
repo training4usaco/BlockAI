@@ -8,7 +8,28 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
             name: 'Layers',
             colour: '#4DB6AC',
             contents: [
-                { kind: 'block', type: 'linear' },
+                { 
+                    kind: 'block', 
+                    type: 'linear',
+                    inputs: {
+                        IN_FEATURES: {
+                            shadow: {
+                                type: "math_number",
+                                fields: {
+                                    NUM: 10,
+                                }
+                            }
+                        },
+                        OUT_FEATURES: {
+                            shadow: {
+                                type: "math_number",
+                                fields: {
+                                    NUM: 20,
+                                }
+                            }
+                        }
+                    }
+                },
                 { kind: 'block', type: 'batch_norm_1d' },
             ],
         },
@@ -47,7 +68,20 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
             colour: '#FFB74D',
             contents: [
                 { kind: 'block', type: 'build_tokenizer' },
-                { kind: 'block', type: 'build_dataset' },
+                { 
+                    kind: 'block', 
+                    type: 'build_dataset',
+                    inputs: {
+                        BLOCK_SIZE: {
+                            shadow: {
+                                type: "math_number",
+                                fields: {
+                                    NUM: 8,
+                                }
+                            }
+                        },
+                    }
+                },
                 { kind: 'block', type: 'split_dataset' },
             ]
         },

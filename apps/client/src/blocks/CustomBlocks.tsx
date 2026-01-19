@@ -9,18 +9,29 @@ import {Tanh} from "../python-library/activations/Tanh.ts";
 import {ReLU} from "../python-library/activations/ReLU.ts";
 import {SplitDataset} from "../python-library/SplitDataset.ts";
 import {LSVInput} from "../python-library/input/LSVInput.ts";
-import {Workspace, WorkspaceSvg} from "blockly/core";
 
-
-function getUniqueName(workspace: Workspace, varname: string) {
-  let candidate = varname;
+function getUniqueName(workspace: Blockly.Workspace, prefix: string) {
+  let candidate = prefix;
   let counter = 2;
 
-  while (workspace.getVariable(candidate)) {
-    candidate = varname + counter;
+  while (true) {
+    let isTaken = false;
+    
+    const allBlocks = workspace.getAllBlocks(false);
+    for (const block of allBlocks) {
+      if (block.data === candidate) {
+        isTaken = true;
+        break;
+      }
+    }
+
+    if (!isTaken) {
+      return candidate; 
+    }
+
+    candidate = prefix + '_' + counter;
     counter++;
   }
-  return candidate;
 }
 
 Blockly.Blocks['linear'] = {
@@ -29,12 +40,12 @@ Blockly.Blocks['linear'] = {
     this.setNextStatement(true);
     this.appendDummyInput()
         .appendField('Linear Layer');
-    this.appendDummyInput()
-        .appendField('In Features')
-        .appendField(new Blockly.FieldNumber(10), 'IN_FEATURES');
-    this.appendDummyInput()
-        .appendField('Out Features')
-        .appendField(new Blockly.FieldNumber(20), 'OUT_FEATURES');
+    this.appendValueInput('IN_FEATURES') 
+        .setCheck('Number')           
+        .appendField('In Features');
+    this.appendValueInput('OUT_FEATURES')
+        .setCheck('Number')
+        .appendField('Out Features');
     this.setColour('#4DB6AC');
     this.setTooltip('Applies a linear transformation: y = xW^T + b');
   }
@@ -58,11 +69,22 @@ Blockly.Blocks['sequential'] = {
         .setCheck(['Layers', 'Activations'])
         .appendField('Sequential Model');
 
-    this.setPreviousStatement(false);
-    this.setNextStatement(false);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true); 
     this.setOutput(false);
 
     this.setTooltip('A container that stacks layers sequentially.');
+  },
+
+  onchange: function(event: any) {
+    if (!this.workspace || this.workspace.isFlyout) return;
+
+    if (event.type === Blockly.Events.BLOCK_CREATE && event.blockId === this.id) {
+      if(!this.data) {
+        this.data = getUniqueName(this.workspace, "sequential_model");
+        this.workspace.createVariable(this.data);
+      }
+    }
   }
 };
 
@@ -271,8 +293,8 @@ Blockly.Blocks['split_dataset'] = {
 };
 
 pythonGenerator.forBlock['linear'] = function(block: Blockly.Block) {
-  const in_feats = block.getFieldValue('IN_FEATURES');
-  const out_feats = block.getFieldValue('OUT_FEATURES');
+  const in_feats = pythonGenerator.valueToCode(block, 'IN_FEATURES', 0) || '10';
+  const out_feats = pythonGenerator.valueToCode(block, 'OUT_FEATURES', 0) || '20';
 
   const className = pythonGenerator.provideFunction_(
       'Linear',
@@ -307,6 +329,8 @@ pythonGenerator.forBlock['relu'] = function(_block: Blockly.Block) {
 };
 
 pythonGenerator.forBlock['sequential'] = function(block: Blockly.Block, generator) {
+  const varname = block.data ?? 'sequential_model';
+  console.log(block.data);
   const statements = generator.statementToCode(block, 'LAYERS')
       .trim()
       .split('\n')
@@ -315,9 +339,9 @@ pythonGenerator.forBlock['sequential'] = function(block: Blockly.Block, generato
 
   console.log(statements);
   
-  return 'layers = [\n' +
+  return `${varname} = [\n` +
       `    ${statements}\n` +
-      ']';
+      ']\n\n';
 };
 
 pythonGenerator.forBlock['lsv_input'] = function(block: any) {
