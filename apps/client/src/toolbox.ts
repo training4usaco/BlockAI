@@ -5,6 +5,41 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
     contents: [
         {
             kind: 'category',
+            name: 'Inputs',
+            colour: '#FF8A65',
+            contents: [
+                { kind: 'block', type: 'lsv_input' },
+            ]
+        },
+
+        {
+            kind: 'category',
+            name: 'Data Processing',
+            colour: '#FFB74D',
+            contents: [
+                { kind: 'block', type: 'build_tokenizer' },
+                { 
+                    kind: 'block', 
+                    type: 'build_dataset',
+                    inputs: {
+                        BLOCK_SIZE: {
+                            shadow: {
+                                type: "math_number",
+                                fields: {
+                                    NUM: 8,
+                                }
+                            }
+                        },
+                    }
+                },
+                { kind: 'block', type: 'split_dataset' },
+            ]
+        },
+
+        { kind: 'sep' },
+
+        {
+            kind: 'category',
             name: 'Layers',
             colour: '#4DB6AC',
             contents: [
@@ -26,8 +61,8 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
             name: 'Model',
             colour: '#78909C',
             contents: [
-                { 
-                    kind: 'block', 
+                {
+                    kind: 'block',
                     type: 'sequential',
                     inputs: {
                         BLOCK_SIZE: {
@@ -71,34 +106,37 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
 
         {
             kind: 'category',
-            name: 'Inputs',
-            colour: '#FF8A65',
+            name: 'Initialize Parameters',
+            colour: '#7986CB',
             contents: [
-                { kind: 'block', type: 'lsv_input' },
-            ]
-        },
-
-        {
-            kind: 'category',
-            name: 'Data Processing',
-            colour: '#FFB74D',
-            contents: [
-                { kind: 'block', type: 'build_tokenizer' },
-                { 
-                    kind: 'block', 
-                    type: 'build_dataset',
+                {
+                    kind: 'block',
+                    type: 'kaiming_normalize',
                     inputs: {
-                        BLOCK_SIZE: {
+                        SCALE: {
                             shadow: {
                                 type: "math_number",
                                 fields: {
-                                    NUM: 8,
+                                    NUM: 0.1,
                                 }
                             }
-                        },
+                        }
                     }
                 },
-                { kind: 'block', type: 'split_dataset' },
+                { 
+                    kind: 'block', 
+                    type: 'initialize_parameters',
+                    inputs: {
+                        EMB_DIM: {
+                            shadow: {
+                                type: "math_number",
+                                fields: {
+                                    NUM: 10,
+                                }
+                            }
+                        }
+                    }
+                }
             ]
         },
 

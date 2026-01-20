@@ -9,6 +9,9 @@ import {Tanh} from "../python-library/activations/Tanh.ts";
 import {ReLU} from "../python-library/activations/ReLU.ts";
 import {SplitDataset} from "../python-library/SplitDataset.ts";
 import {LSVInput} from "../python-library/input/LSVInput.ts";
+import {KNOWN_ACTIVATIONS} from "./BlockRegistry.ts";
+import {KaimingNormalization} from "../python-library/KaimingNormalization.ts";
+import {InitializeParameters} from "../python-library/InitializeParameters.ts";
 
 function getUniqueName(workspace: Blockly.Workspace, prefix: string) {
   let candidate = prefix;
@@ -307,6 +310,54 @@ Blockly.Blocks['split_dataset'] = {
   },
 };
 
+Blockly.Blocks['kaiming_normalize'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("Apply Kaiming Normalization");
+    
+    this.setInputsInline(true);
+
+    this.appendValueInput("MODEL")
+        .setCheck("Array")
+        .appendField("to model");
+
+    this.appendValueInput('SCALE')
+        .setCheck('Number')
+        .appendField('with scale');
+
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+
+    this.setColour('#7986CB');
+    this.setTooltip("Adjusts initial weights based on activation functions (ReLU/Tanh) to prevent vanishing gradients.");
+  }
+}
+
+Blockly.Blocks['initialize_parameters'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("Initialize Parameters");
+
+    this.setInputsInline(true);
+
+    this.appendValueInput("MODEL")
+        .setCheck("Array")
+        .appendField("for model");
+
+    this.appendValueInput('TOKENIZER')
+        .appendField('with tokenizer');
+    
+    this.appendValueInput('EMB_DIM')
+        .appendField('and embedding dimension');
+
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+
+    this.setColour('#7986CB');
+    this.setTooltip("Initializes");
+  }
+}
+
 pythonGenerator.forBlock['linear'] = function(_block: Blockly.Block) {
   const className = pythonGenerator.provideFunction_(
       'Linear',
@@ -397,7 +448,7 @@ pythonGenerator.forBlock['sequential'] = function(block: Blockly.Block) {
     }
   }
 
-  layersCode.push(`Layer(${currentInDim}, ${pythonGenerator.valueToCode(block, 'TOKENIZER', 0) || 'tokenizer'}.vocab_size)`)
+  layersCode.push(`${linearClassName}(${currentInDim}, ${pythonGenerator.valueToCode(block, 'TOKENIZER', 0) || 'tokenizer'}.vocab_size)`)
   const innerContent = layersCode.join('');
 
   return `${varname} = [\n` +
@@ -455,3 +506,32 @@ pythonGenerator.forBlock['split_dataset'] = function(block: any) {
   
   return SplitDataset(dataset, data_train, data_dev, data_test, train_split, dev_split);
 };
+
+pythonGenerator.forBlock['kaiming_normalize'] = function(block: any) {
+  const modelName = pythonGenerator.valueToCode(block, 'MODEL', 0) || 'layers';
+  const scale = pythonGenerator.valueToCode(block, 'SCALE', 0);
+
+  const linearClass = pythonGenerator.provideFunction_('Linear', Linear);
+  let activationChecks = "";
+
+  KNOWN_ACTIVATIONS.forEach(activation => {
+    if (block.workspace.getBlocksByType(activation.type).length > 0) {
+      const actClassName = pythonGenerator.provideFunction_(activation.name, activation.classDef);
+
+      activationChecks +=
+          `                elif isinstance(next_layer, ${actClassName}):\n` +
+          `                    gain = ${activation.gain}\n` +
+          `                    break\n`;
+    }
+  });
+
+  return KaimingNormalization(linearClass, scale, modelName, activationChecks);
+};
+
+pythonGenerator.forBlock['initialize_parameters'] = function(block: any) {
+  const modelName = pythonGenerator.valueToCode(block, 'MODEL', 0) || 'layers';
+  const tokenizer = pythonGenerator.valueToCode(block, 'TOKENIZER', 0) || 'tokenizer';
+  const embDim = pythonGenerator.valueToCode(block, 'EMB_DIM', 0) || '10';
+  
+  return InitializeParameters(modelName, tokenizer, embDim);
+}
