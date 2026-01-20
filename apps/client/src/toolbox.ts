@@ -8,28 +8,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
             name: 'Layers',
             colour: '#4DB6AC',
             contents: [
-                { 
-                    kind: 'block', 
-                    type: 'linear',
-                    inputs: {
-                        IN_FEATURES: {
-                            shadow: {
-                                type: "math_number",
-                                fields: {
-                                    NUM: 10,
-                                }
-                            }
-                        },
-                        OUT_FEATURES: {
-                            shadow: {
-                                type: "math_number",
-                                fields: {
-                                    NUM: 20,
-                                }
-                            }
-                        }
-                    }
-                },
+                { kind: 'block', type: 'linear' },
                 { kind: 'block', type: 'batch_norm_1d' },
             ],
         },
@@ -47,7 +26,44 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
             name: 'Model',
             colour: '#78909C',
             contents: [
-                { kind: 'block', type: 'sequential' },
+                { 
+                    kind: 'block', 
+                    type: 'sequential',
+                    inputs: {
+                        BLOCK_SIZE: {
+                            shadow: {
+                                type: "math_number",
+                                fields: {
+                                    NUM: 8,
+                                }
+                            }
+                        },
+                        REPS: {
+                            shadow: {
+                                type: "math_number",
+                                fields: {
+                                    NUM: 4,
+                                }
+                            }
+                        },
+                        NUM_HIDDEN: {
+                            shadow: {
+                                type: "math_number",
+                                fields: {
+                                    NUM: 200,
+                                }
+                            }
+                        },
+                        EMB_DIM: {
+                            shadow: {
+                                type: "math_number",
+                                fields: {
+                                    NUM: 10,
+                                }
+                            }
+                        }
+                    },
+                },
             ]
         },
 
