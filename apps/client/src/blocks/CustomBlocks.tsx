@@ -355,6 +355,17 @@ Blockly.Blocks['initialize_parameters'] = {
 
     this.setColour('#7986CB');
     this.setTooltip("Initializes");
+  },
+
+  onchange: function(event: any) {
+    if (!this.workspace || this.workspace.isFlyout) return;
+
+    if (event.type === Blockly.Events.BLOCK_CREATE && event.blockId === this.id) {
+      if(!this.data) {
+        this.data = getUniqueName(this.workspace, "embedding_table");
+        this.workspace.createVariable(this.data);
+      }
+    }
   }
 }
 
@@ -529,9 +540,10 @@ pythonGenerator.forBlock['kaiming_normalize'] = function(block: any) {
 };
 
 pythonGenerator.forBlock['initialize_parameters'] = function(block: any) {
+  const varname = block.data ?? 'embedding_table';
   const modelName = pythonGenerator.valueToCode(block, 'MODEL', 0) || 'layers';
   const tokenizer = pythonGenerator.valueToCode(block, 'TOKENIZER', 0) || 'tokenizer';
   const embDim = pythonGenerator.valueToCode(block, 'EMB_DIM', 0) || '10';
   
-  return InitializeParameters(modelName, tokenizer, embDim);
+  return InitializeParameters(varname, modelName, tokenizer, embDim);
 }
