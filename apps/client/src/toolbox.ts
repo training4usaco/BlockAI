@@ -26,7 +26,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
                             shadow: {
                                 type: "math_number",
                                 fields: {
-                                    NUM: 8,
+                                    NUM: 3,
                                 }
                             }
                         },
@@ -69,7 +69,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
                             shadow: {
                                 type: "math_number",
                                 fields: {
-                                    NUM: 8,
+                                    NUM: 3,
                                 }
                             }
                         },
@@ -132,6 +132,62 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
                                 type: "math_number",
                                 fields: {
                                     NUM: 10,
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+
+        { kind: 'sep' },
+
+        {
+            kind: 'category',
+            name: 'Training',
+            colour: '#B19CD9',
+            contents: [
+                {
+                    kind: 'block',
+                    type: 'training_loop',
+                    inputs: {
+                        STEPS: {
+                            shadow: {
+                                type: "math_number",
+                                fields: { 
+                                    NUM: 200000 
+                                }
+                            }
+                        },
+                        BATCH_SIZE: {
+                            shadow: {
+                                type: "math_number",
+                                fields: { 
+                                    NUM: 32 
+                                }
+                            }
+                        },
+                        LR_MAX: {
+                            shadow: {
+                                type: "math_number",
+                                fields: { 
+                                    NUM: 0.08 
+                                }
+                            }
+                        },
+                        BLOCK_SIZE: {
+                            shadow: {
+                                type: "math_number",
+                                fields: { 
+                                    NUM: 3 
+                                }
+                            }
+                        },
+                        EMB_DIM: {
+                            shadow: {
+                                type: "math_number",
+                                fields: { 
+                                    NUM: 10 
                                 }
                             }
                         }

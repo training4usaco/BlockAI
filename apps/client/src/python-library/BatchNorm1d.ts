@@ -24,4 +24,7 @@ export const BatchNorm1d =
     "            with torch.no_grad():\n" +
     "                self.running_mean = (1 - self.momentum) * self.running_mean + self.momentum * self.xmean\n" +
     "                self.running_var = (1 - self.momentum) * self.running_var + self.momentum * self.xvar\n" +
-    "        return self.out\n"
+    "        return self.out\n" +
+    "\n" +
+    "    def parameters(self):\n" +
+    "        return [self.gamma, self.beta]\n"
