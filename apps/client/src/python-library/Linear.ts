@@ -8,4 +8,7 @@ export const Linear =
     "        self.out = x @ self.weight\n" +
     "        if self.bias is not None:\n" +
     "            self.out += self.bias\n" +
-    "        return self.out\n"
+    "        return self.out\n" +
+    "\n" +
+    "    def parameters(self):\n" +
+    "        return [self.weight] + ([self.bias] if self.bias is not None else [])\n"

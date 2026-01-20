@@ -41,7 +41,8 @@ const BlocklyWorkspace: React.FC = () => {
             if (workspaceRef.current) {
                 const importsCode =
                     'import torch\n' +
-                    'import torch.nn.functional as F\n';
+                    'import torch.nn.functional as F\n' +
+                    'import math\n';
 
                 const generatedCode = pythonGenerator.workspaceToCode(workspaceRef.current);
                 
