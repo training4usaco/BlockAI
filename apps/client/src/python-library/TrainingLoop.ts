@@ -33,5 +33,8 @@ for i in range(${steps}):
 
     if i % 1000 == 0:
         print(f'{i:7d}/${steps}: {loss.item():.4f} (lr={lr:.4f})')
+        
+for layer in ${modelVar}:
+    layer.training = False
 `;
 };
