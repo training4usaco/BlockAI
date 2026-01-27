@@ -197,6 +197,47 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         },
 
         { kind: 'sep' },
+
+        { 
+            kind: 'category',
+            name: 'Evaluation',
+            colour: '#5BCF7A',
+            contents: [
+                { 
+                    kind: 'block', 
+                    type: 'generate_inference',
+                    inputs: {
+                        NUM_SAMPLES: {
+                            shadow: {
+                                type: "math_number",
+                                fields: {
+                                    NUM: 20
+                                }
+                            }
+                        },
+                        BLOCK_SIZE: {
+                            shadow: {
+                                type: "math_number",
+                                fields: {
+                                    NUM: 3
+                                }
+                            }
+                        },
+                    }
+                }
+            ]
+        },
+
+        {
+            kind: 'category',
+            name: 'Visualization',
+            colour: '#4CAD66',
+            contents: [
+                { kind: 'block', type: 'block' }
+            ]
+        },
+        
+        { kind: 'sep' },
         
         {
             kind: 'category',

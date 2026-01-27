@@ -13,6 +13,7 @@ import {KNOWN_ACTIVATIONS} from "./BlockRegistry.ts";
 import {KaimingNormalization} from "../python-library/KaimingNormalization.ts";
 import {InitializeParameters} from "../python-library/InitializeParameters.ts";
 import {TrainingLoop} from "../python-library/TrainingLoop.ts";
+import {GenerateInference} from "../python-library/GenerateInference.ts";
 
 function getUniqueName(workspace: Blockly.Workspace, prefix: string) {
   let candidate = prefix;
@@ -423,6 +424,35 @@ Blockly.Blocks['training_loop'] = {
   }
 };
 
+Blockly.Blocks['generate_inference'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("Generate inference");
+
+    this.appendValueInput("MODEL")
+        .appendField("model");
+
+    this.appendValueInput("EMBEDDINGS")
+        .appendField("embedding table");
+    
+    this.appendValueInput("TOKENIZER")
+        .appendField("tokenizer");
+
+    this.appendValueInput("NUM_SAMPLES")
+        .setCheck("Number")
+        .appendField("number of samples");
+    
+    this.appendValueInput("BLOCK_SIZE")
+        .setCheck("Number")
+        .appendField("context length");
+
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#5BCF7A');
+    this.setTooltip("Generates inferences from a trained model");
+  }
+};
+
 pythonGenerator.forBlock['linear'] = function(_block: Blockly.Block) {
   const className = pythonGenerator.provideFunction_(
       'Linear',
@@ -638,3 +668,13 @@ pythonGenerator.forBlock['training_loop'] = function(block: any) {
       embDim
   );
 };
+
+pythonGenerator.forBlock['generate_inference'] = function(block: any) {
+  const samples = pythonGenerator.valueToCode(block, 'NUM_SAMPLES', 0) || '20';
+  const model = pythonGenerator.valueToCode(block, 'MODEL', 0) || 'sequential_model';
+  const embeddingTable = pythonGenerator.valueToCode(block, 'EMBEDDINGS', 0) || 'embedding_table';
+  const tokenizer = pythonGenerator.valueToCode(block, 'TOKENIZER', 0) || 'tokenizer';
+  const blockSize = pythonGenerator.valueToCode(block, 'BLOCK_SIZE', 0) || '3';
+  
+  return GenerateInference(samples, tokenizer, embeddingTable, blockSize, model);
+}
