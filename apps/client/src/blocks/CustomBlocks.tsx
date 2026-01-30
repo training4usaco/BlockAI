@@ -11,9 +11,10 @@ import {SplitDataset} from "../python-library/SplitDataset.ts";
 import {LSVInput} from "../python-library/input/LSVInput.ts";
 import {KNOWN_ACTIVATIONS} from "./BlockRegistry.ts";
 import {KaimingNormalization} from "../python-library/KaimingNormalization.ts";
-import {InitializeParameters} from "../python-library/InitializeParameters.ts";
 import {TrainingLoop} from "../python-library/TrainingLoop.ts";
 import {GenerateInference} from "../python-library/GenerateInference.ts";
+import {Sequential} from "../python-library/Sequential.ts";
+import {SquashLogits} from "../python-library/SquashLogits.ts";
 
 function getUniqueName(workspace: Blockly.Workspace, prefix: string) {
   let candidate = prefix;
@@ -323,10 +324,6 @@ Blockly.Blocks['kaiming_normalize'] = {
         .setCheck("Array")
         .appendField("to model");
 
-    this.appendValueInput('SCALE')
-        .setCheck('Number')
-        .appendField('with scale');
-
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
 
@@ -335,10 +332,10 @@ Blockly.Blocks['kaiming_normalize'] = {
   }
 }
 
-Blockly.Blocks['initialize_parameters'] = {
+Blockly.Blocks['squash_logits'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("Initialize Parameters");
+        .appendField("Squash Logits");
 
     this.setInputsInline(true);
 
@@ -346,37 +343,27 @@ Blockly.Blocks['initialize_parameters'] = {
         .setCheck("Array")
         .appendField("for model");
 
-    this.appendValueInput('TOKENIZER')
-        .appendField('with tokenizer');
-    
-    this.appendValueInput('EMB_DIM')
-        .appendField('and embedding dimension');
+    this.appendValueInput('SCALE')
+        .setCheck('Number')
+        .appendField('with scale');
 
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
 
     this.setColour('#7986CB');
-    this.setTooltip("Initializes");
-  },
+    this.setTooltip("Squashes logits to avoid being overconfidently wrong");
+  }
+}
 
-  onchange: function(event: any) {
-    if (!this.workspace || this.workspace.isFlyout) return;
+Blockly.Blocks['no_grad'] = {
+  init: function() {
+    this.appendStatementInput("STATEMENTS")
+        .appendField("Set no grad");
 
-    if (event.type === Blockly.Events.BLOCK_CREATE && event.blockId === this.id) {
-      if(!this.data) {
-        const embName = getUniqueName(this.workspace, "embedding_table");
-        const paramName = getUniqueName(this.workspace, "parameters");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
 
-        this.workspace.createVariable(embName);
-        this.workspace.createVariable(paramName);
-
-        const metaData = {
-          emb: embName,
-          params: paramName
-        };
-        this.data = JSON.stringify(metaData);
-      }
-    }
+    this.setColour('#7986CB');
   }
 }
 
@@ -397,30 +384,16 @@ Blockly.Blocks['training_loop'] = {
         .setCheck("Number")
         .appendField("max LR");
 
-    this.appendValueInput("PARAMS")
-        .appendField("parameters list");
-
     this.appendValueInput("MODEL")
         .appendField("model");
 
-    this.appendValueInput("EMBEDDINGS")
-        .appendField("embedding table");
-
     this.appendValueInput("TRAINING_DATA")
-        .appendField("trianing data");
-
-    this.appendValueInput("BLOCK_SIZE")
-        .setCheck("Number")
-        .appendField("context length");
-
-    this.appendValueInput("EMB_DIM")
-        .setCheck("Number")
-        .appendField("embedding dim");
+        .appendField("training data");
 
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#B19CD9');
-    this.setTooltip("Trains the model using gradien descent with a learning rate that smoothly decays from Max LR to 0.");
+    this.setTooltip("Trains the model using gradient descent with a learning rate that smoothly decays from Max LR to 0.");
   }
 };
 
@@ -429,22 +402,12 @@ Blockly.Blocks['generate_inference'] = {
     this.appendDummyInput()
         .appendField("Generate inference");
 
-    this.appendValueInput("MODEL")
-        .appendField("model");
-
-    this.appendValueInput("EMBEDDINGS")
-        .appendField("embedding table");
-    
-    this.appendValueInput("TOKENIZER")
-        .appendField("tokenizer");
-
     this.appendValueInput("NUM_SAMPLES")
         .setCheck("Number")
         .appendField("number of samples");
-    
-    this.appendValueInput("BLOCK_SIZE")
-        .setCheck("Number")
-        .appendField("context length");
+
+    this.appendValueInput("MODEL")
+        .appendField("model");
 
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
@@ -453,21 +416,21 @@ Blockly.Blocks['generate_inference'] = {
   }
 };
 
-pythonGenerator.forBlock['linear'] = function(_block: Blockly.Block) {
+pythonGenerator.forBlock['linear'] = function(_block: Blockly.Block, _generator, in_features: number = 100, out_features: number = 100) {
   const className = pythonGenerator.provideFunction_(
       'Linear',
      Linear 
   );
 
-  return `${className}(100, 100)\n`;
+  return `${className}(${in_features}, ${out_features})\n`;
 };
 
-pythonGenerator.forBlock['batch_norm_1d'] = function(_block: Blockly.Block) {
+pythonGenerator.forBlock['batch_norm_1d'] = function(_block: Blockly.Block, _generator, n: number = 100) {
   const className = pythonGenerator.provideFunction_(
       'BatchNorm1d',
       BatchNorm1d
   );
-  return `${className}(100)`;
+  return `${className}(${n})`;
 };
 
 pythonGenerator.forBlock['tanh'] = function(_block: Blockly.Block) {
@@ -486,69 +449,69 @@ pythonGenerator.forBlock['relu'] = function(_block: Blockly.Block) {
   return `${className}()`;
 };
 
-pythonGenerator.forBlock['sequential'] = function(block: Blockly.Block) {
-  const linearClassName = pythonGenerator.provideFunction_(
-      'Linear',
-      Linear
-  );
-
-  const batchNorm1dClassName = pythonGenerator.provideFunction_(
-      'BatchNorm1d',
-      BatchNorm1d
-  );
-  
+pythonGenerator.forBlock['sequential'] = function(block: any) {
+  // 1. Get Hyperparameters
   const blockSize = pythonGenerator.valueToCode(block, 'BLOCK_SIZE', 0) || '3';
   const nHidden = pythonGenerator.valueToCode(block, 'NUM_HIDDEN', 0) || '200';
   const embDim = pythonGenerator.valueToCode(block, 'EMB_DIM', 0) || '10';
-  const reps = pythonGenerator.valueToCode(block, 'REPS', 0) || '4';
+  const reps = parseInt(pythonGenerator.valueToCode(block, 'REPS', 0) || '4');
+  const tokenizer = pythonGenerator.valueToCode(block, 'TOKENIZER', 0) || 'tokenizer';
 
-  const varname = block.data ?? 'sequential_model';
-  let layersCode = [];
+  // 2. Define the Variable Name (e.g., 'model')
+  const varname = block.data ?? 'model';
+
+  // 3. Inject the Class Definitions
+  const linearClass = pythonGenerator.provideFunction_('Linear', Linear);
+  const sequentialClass = pythonGenerator.provideFunction_('Sequential', Sequential);
 
   let currentInDim = `${embDim} * ${blockSize}`;
-  
-  for(let i = 0; i < (parseInt(reps) || 1); ++i) {
+  const rows: string[] = [];
+
+  for(let i = 0; i < reps; ++i) {
     let layerBlock = block.getInputTargetBlock('LAYERS');
-    let line = '';
+    const rowParts: string[] = [];
+
     while(layerBlock) {
-      if(layerBlock.type === 'linear') {
-        const blockCode = `${linearClassName}(${currentInDim}, ${nHidden})`;
-        line += (blockCode + ', ')
+      let code = '';
+
+      if (layerBlock.type === 'linear') {
+        code = pythonGenerator.forBlock['linear'](
+            layerBlock,
+            pythonGenerator,
+            currentInDim,
+            nHidden
+        )?.toString() ?? `Linear(${currentInDim}, ${nHidden})`;
         currentInDim = nHidden;
       }
-      else if(layerBlock.type === 'batch_norm_1d') {
-        const blockCode = `${batchNorm1dClassName}(${currentInDim})`;
-        line += (blockCode + ', ')
-        currentInDim = nHidden;
+      else if (layerBlock.type === 'batch_norm_1d') {
+        code = pythonGenerator.forBlock['batch_norm_1d'](
+            layerBlock,
+            pythonGenerator,
+            currentInDim
+        )?.toString() ?? `BatchNorm1d(${currentInDim})`;
       }
       else {
-        const generatorFunc = pythonGenerator.forBlock[layerBlock.type];
-        if (generatorFunc) {
-          let code = generatorFunc.call(pythonGenerator, layerBlock, pythonGenerator);
-          if(Array.isArray(code)) {
-            code = code[0];
-          }
-
-          code = code ? code.toString().trim() : '';
-
-          if(code) {
-            line += (code + ', ');
-          }
-        }
+        const genFunc = pythonGenerator.forBlock[layerBlock.type];
+        if (genFunc) code = genFunc(layerBlock, pythonGenerator)?.toString() ?? "UNKNOWN BLOCK";
       }
+
+      if (code) rowParts.push(code.trim());
       layerBlock = layerBlock.getNextBlock();
     }
-    if(line) {
-      layersCode.push(line + '\n    ')
-    }
+
+    if (rowParts.length > 0) rows.push(rowParts.join(', '));
   }
 
-  layersCode.push(`${linearClassName}(${currentInDim}, ${pythonGenerator.valueToCode(block, 'TOKENIZER', 0) || 'tokenizer'}.vocab_size)`)
-  const innerContent = layersCode.join('');
+  rows.push(`${linearClass}(${currentInDim}, ${tokenizer}.vocab_size)`);
 
-  return `${varname} = [\n` +
-      `    ${innerContent}\n` +
-      `]\n\n`
+  const layersListStr = `layers=[\n        ${rows.join(',\n        ')}\n    ]`;
+
+  return `${varname} = ${sequentialClass}(\n` +
+      `    ${layersListStr},\n` +
+      `    tokenizer=${tokenizer},\n` +
+      `    embedding_dim=${embDim},\n` + 
+      `    context_len=${blockSize}\n` +
+      `)\n\n`;
 };
 
 pythonGenerator.forBlock['lsv_input'] = function(block: any) {
@@ -604,7 +567,6 @@ pythonGenerator.forBlock['split_dataset'] = function(block: any) {
 
 pythonGenerator.forBlock['kaiming_normalize'] = function(block: any) {
   const modelName = pythonGenerator.valueToCode(block, 'MODEL', 0) || 'layers';
-  const scale = pythonGenerator.valueToCode(block, 'SCALE', 0);
 
   const linearClass = pythonGenerator.provideFunction_('Linear', Linear);
   let activationChecks = "";
@@ -614,34 +576,28 @@ pythonGenerator.forBlock['kaiming_normalize'] = function(block: any) {
       const actClassName = pythonGenerator.provideFunction_(activation.name, activation.classDef);
 
       activationChecks +=
-          `                elif isinstance(next_layer, ${actClassName}):\n` +
-          `                    gain = ${activation.gain}\n` +
-          `                    break\n`;
+          `            elif isinstance(next_layer, ${actClassName}):\n` +
+          `                gain = ${activation.gain}\n` +
+          `                break\n`;
     }
   });
 
-  return KaimingNormalization(linearClass, scale, modelName, activationChecks);
+  return KaimingNormalization(linearClass, modelName, activationChecks);
 };
 
-pythonGenerator.forBlock['initialize_parameters'] = function(block: any) {
-  let embeddingTable = 'embedding_table';
-  let params = 'parameters';
-
-  if (block.data) {
-    try {
-      const meta = JSON.parse(block.data);
-      embeddingTable = meta.emb;
-      params = meta.params;
-    } catch (e) {
-      console.error("Failed to parse block data:", e);
-    }
-  }
-  
+pythonGenerator.forBlock['squash_logits'] = function(block: any) {
   const modelName = pythonGenerator.valueToCode(block, 'MODEL', 0) || 'layers';
-  const tokenizer = pythonGenerator.valueToCode(block, 'TOKENIZER', 0) || 'tokenizer';
-  const embDim = pythonGenerator.valueToCode(block, 'EMB_DIM', 0) || '10';
+  const scale = pythonGenerator.valueToCode(block, 'SCALE', 0);
   
-  return InitializeParameters(embeddingTable, params, modelName, tokenizer, embDim);
+  return SquashLogits(modelName, scale);
+}
+
+pythonGenerator.forBlock['no_grad'] = function(block: any) {
+  let statementCode = pythonGenerator.statementToCode(block, 'STATEMENTS');
+  if (!statementCode) {
+    statementCode = '    pass'
+  }
+  return 'with torch.no_grad():\n' + statementCode + '\n';
 }
 
 pythonGenerator.forBlock['training_loop'] = function(block: any) {
@@ -649,32 +605,15 @@ pythonGenerator.forBlock['training_loop'] = function(block: any) {
   const batchSize = pythonGenerator.valueToCode(block, 'BATCH_SIZE', 0) || '32';
   const lrMax = pythonGenerator.valueToCode(block, 'LR_MAX', 0) || '0.08';
 
-  const params = pythonGenerator.valueToCode(block, 'PARAMS', 0) || 'parameters';
   const model = pythonGenerator.valueToCode(block, 'MODEL', 0) || 'layers';
-  const embeddingTable = pythonGenerator.valueToCode(block, 'EMBEDDINGS', 0) || 'embedding_table';
   const trainingData = pythonGenerator.valueToCode(block, 'TRAINING_DATA', 0);
-  const blockSize = pythonGenerator.valueToCode(block, 'BLOCK_SIZE', 0) || '3';
-  const embDim = pythonGenerator.valueToCode(block, 'EMB_DIM', 0) || '10';
 
-  return TrainingLoop(
-      steps,
-      batchSize,
-      lrMax,
-      params,
-      model,
-      embeddingTable,
-      trainingData,
-      blockSize,
-      embDim
-  );
+  return TrainingLoop(steps, batchSize, lrMax, model, trainingData);
 };
 
 pythonGenerator.forBlock['generate_inference'] = function(block: any) {
   const samples = pythonGenerator.valueToCode(block, 'NUM_SAMPLES', 0) || '20';
   const model = pythonGenerator.valueToCode(block, 'MODEL', 0) || 'sequential_model';
-  const embeddingTable = pythonGenerator.valueToCode(block, 'EMBEDDINGS', 0) || 'embedding_table';
-  const tokenizer = pythonGenerator.valueToCode(block, 'TOKENIZER', 0) || 'tokenizer';
-  const blockSize = pythonGenerator.valueToCode(block, 'BLOCK_SIZE', 0) || '3';
   
-  return GenerateInference(samples, tokenizer, embeddingTable, blockSize, model);
+  return GenerateInference(samples, model);
 }

@@ -1,14 +1,4 @@
-export const TrainingLoop = (
-    steps: string,
-    batchSize: string,
-    lrMax: string,
-    paramsVar: string,
-    modelVar: string,
-    embTable: string,
-    trainingData: string,
-    blockSize: string,
-    embDim: string
-) => {
+export const TrainingLoop = (steps: string, batchSize: string, lrMax: string, modelVar: string, trainingData: string) => {
     return `print(f"Starting training for ${steps} steps...")
 xtr, ytr = ${trainingData}
 for i in range(${steps}):
@@ -16,25 +6,23 @@ for i in range(${steps}):
     idx = torch.randint(0, xtr.shape[0], (${batchSize},))
     xb, yb = xtr[idx], ytr[idx]
 
-    emb = ${embTable}[xb]
-    x = emb.view(-1, ${embDim} * ${blockSize})
-    
-    for layer in ${modelVar}:
-        x = layer(x)
-    
-    loss = F.cross_entropy(x, yb)
+    logits = ${modelVar}(xb)
+    loss = F.cross_entropy(logits, yb)
 
-    for p in ${paramsVar}:
+    for p in ${modelVar}.parameters():
         p.grad = None
     loss.backward()
 
-    for p in ${paramsVar}:
-        p.data += -lr * p.grad
+    lr = 0.08 if i < 100000 else 0.008
+    for p in ${modelVar}.parameters():
+        p.data -= lr * p.grad
 
     if i % 1000 == 0:
-        print(f'{i:7d}/${steps}: {loss.item():.4f} (lr={lr:.4f})')
+        print(f'{i:7d}/{${steps}:7d}: {loss.item():.4f}')
+    ${modelVar}.lossi.append(loss.item())
         
-for layer in ${modelVar}:
+for layer in ${modelVar}.layers:
     layer.training = False
+    
 `;
 };

@@ -109,34 +109,22 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
             name: 'Initialize Parameters',
             colour: '#7986CB',
             contents: [
-                {
-                    kind: 'block',
-                    type: 'kaiming_normalize',
+                { kind: 'block', type: 'no_grad' },
+                { kind: 'block', type: 'kaiming_normalize' },
+                { 
+                    kind: 'block', 
+                    type: 'squash_logits',
                     inputs: {
                         SCALE: {
                             shadow: {
                                 type: "math_number",
                                 fields: {
-                                    NUM: 0.1,
+                                    NUM: 0.1
                                 }
                             }
                         }
                     }
                 },
-                { 
-                    kind: 'block', 
-                    type: 'initialize_parameters',
-                    inputs: {
-                        EMB_DIM: {
-                            shadow: {
-                                type: "math_number",
-                                fields: {
-                                    NUM: 10,
-                                }
-                            }
-                        }
-                    }
-                }
             ]
         },
 
@@ -175,22 +163,6 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
                                 }
                             }
                         },
-                        BLOCK_SIZE: {
-                            shadow: {
-                                type: "math_number",
-                                fields: { 
-                                    NUM: 3 
-                                }
-                            }
-                        },
-                        EMB_DIM: {
-                            shadow: {
-                                type: "math_number",
-                                fields: { 
-                                    NUM: 10 
-                                }
-                            }
-                        }
                     }
                 }
             ]
@@ -212,14 +184,6 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
                                 type: "math_number",
                                 fields: {
                                     NUM: 20
-                                }
-                            }
-                        },
-                        BLOCK_SIZE: {
-                            shadow: {
-                                type: "math_number",
-                                fields: {
-                                    NUM: 3
                                 }
                             }
                         },
