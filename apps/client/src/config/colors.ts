@@ -1,0 +1,24 @@
+export const COLORS = {
+    INPUT: '#FF8A65', 
+    DATA_PROCESSING: '#FFB74D',
+
+    LAYERS: '#4DB6AC',
+    ACTIVATIONS: '#80CBC4', 
+    MODEL: '#78909C', 
+
+    PARAM_INITIALIZATION: '#7986CB', 
+    TRAINING: '#B19CD9',
+
+    EVALUATION: '#5BCF7A', 
+    VISUALIZATION: '#4CAD66',
+
+    LOOPS: '#5CA65C',
+    LOGIC: '#5C81A6',
+    MATH: '#5C68A6',
+    TEXT: '#5CA68D',
+    LISTS: '#745BA5',
+    VARIABLES: '#A65C81',
+    FUNCTIONS: '#995BA5',
+
+    CUSTOM_CODE: '#555555'
+};

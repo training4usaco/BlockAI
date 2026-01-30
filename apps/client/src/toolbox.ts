@@ -1,4 +1,5 @@
 import * as Blockly from "blockly/core";
+import {COLORS} from "./config/colors.ts";
 
 export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
     kind: 'categoryToolbox',
@@ -6,7 +7,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         {
             kind: 'category',
             name: 'Inputs',
-            colour: '#FF8A65',
+            colour: COLORS.INPUT,
             contents: [
                 { kind: 'block', type: 'lsv_input' },
             ]
@@ -15,7 +16,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         {
             kind: 'category',
             name: 'Data Processing',
-            colour: '#FFB74D',
+            colour: COLORS.DATA_PROCESSING,
             contents: [
                 { kind: 'block', type: 'build_tokenizer' },
                 { 
@@ -41,7 +42,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         {
             kind: 'category',
             name: 'Layers',
-            colour: '#4DB6AC',
+            colour: COLORS.LAYERS,
             contents: [
                 { kind: 'block', type: 'linear' },
                 { kind: 'block', type: 'batch_norm_1d' },
@@ -50,7 +51,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         {
             kind: 'category',
             name: 'Activations',
-            colour: '#80CBC4',
+            colour: COLORS.ACTIVATIONS,
             contents: [
                 { kind: 'block', type: 'relu' },
                 { kind: 'block', type: 'tanh' },
@@ -59,7 +60,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         {
             kind: 'category',
             name: 'Model',
-            colour: '#78909C',
+            colour: COLORS.MODEL,
             contents: [
                 {
                     kind: 'block',
@@ -107,7 +108,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         {
             kind: 'category',
             name: 'Initialize Parameters',
-            colour: '#7986CB',
+            colour: COLORS.PARAM_INITIALIZATION,
             contents: [
                 { kind: 'block', type: 'no_grad' },
                 { kind: 'block', type: 'kaiming_normalize' },
@@ -133,7 +134,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         {
             kind: 'category',
             name: 'Training',
-            colour: '#B19CD9',
+            colour: COLORS.TRAINING,
             contents: [
                 {
                     kind: 'block',
@@ -173,7 +174,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         { 
             kind: 'category',
             name: 'Evaluation',
-            colour: '#5BCF7A',
+            colour: COLORS.EVALUATION,
             contents: [
                 { 
                     kind: 'block', 
@@ -195,7 +196,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         {
             kind: 'category',
             name: 'Visualization',
-            colour: '#4CAD66',
+            colour: COLORS.EVALUATION,
             contents: [
                 { kind: 'block', type: 'block' }
             ]
@@ -206,7 +207,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         {
             kind: 'category',
             name: 'Loops',
-            colour: '#5CA65C',
+            colour: COLORS.LOOPS,
             contents: [
                 {
                     kind: 'block',
@@ -262,7 +263,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         {
             kind: 'category',
             name: 'Logic',
-            colour: '#5C81A6',
+            colour: COLORS.LOGIC,
             contents: [
                 { kind: 'block', type: 'logic_compare' },
                 { kind: 'block', type: 'logic_operation' },
@@ -273,7 +274,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         {
             kind: 'category',
             name: 'Math',
-            colour: '#5C68A6',
+            colour: COLORS.MATH,
             contents: [
                 { kind: 'block', type: 'math_number' },
                 { kind: 'block', type: 'math_arithmetic' }
@@ -283,7 +284,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         {
             kind: 'category',
             name: 'Text',
-            colour: '#5CA68D',
+            colour: COLORS.TEXT,
             contents: [
                 { kind: 'block', type: 'text' },
                 { kind: 'block', type: 'text_join' },
@@ -296,7 +297,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         {
             kind: 'category',
             name: 'Lists',
-            colour: '#735AA5',
+            colour: COLORS.LISTS,
             contents: [
                 { kind: 'block', type: 'lists_create_with' },
                 { kind: 'block', type: 'lists_repeat' },
@@ -316,12 +317,12 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         {
             kind: 'category',
             name: 'Variables',
-            colour: '#A65C81',
+            colour: COLORS.VARIABLES,
             custom: 'VARIABLE',
         },
         {
             kind: 'category',
-            colour: '#995ba5',
+            colour: COLORS.FUNCTIONS,
             name: 'Functions',
             custom: 'PROCEDURE',
         },
@@ -330,7 +331,7 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
 
         {
             kind: 'category',
-            colour: '#555555',
+            colour: COLORS.CUSTOM_CODE,
             name: 'Custom Code',
             contents: [
                 { kind: 'block', type: 'custom_code' } 

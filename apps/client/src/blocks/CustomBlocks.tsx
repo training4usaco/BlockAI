@@ -15,6 +15,7 @@ import {TrainingLoop} from "../python-library/TrainingLoop.ts";
 import {GenerateInference} from "../python-library/GenerateInference.ts";
 import {Sequential} from "../python-library/Sequential.ts";
 import {SquashLogits} from "../python-library/SquashLogits.ts";
+import {COLORS} from "../config/colors.ts";
 
 function getUniqueName(workspace: Blockly.Workspace, prefix: string) {
   let candidate = prefix;
@@ -46,7 +47,7 @@ Blockly.Blocks['linear'] = {
     this.setNextStatement(true);
     this.appendDummyInput()
         .appendField('Linear Layer');
-    this.setColour('#4DB6AC');
+    this.setColour(COLORS.LAYERS);
     this.setTooltip('Applies a linear transformation: y = xW^T + b');
   }
 };
@@ -57,13 +58,13 @@ Blockly.Blocks['batch_norm_1d'] = {
     this.setNextStatement(true);
     this.appendDummyInput()
         .appendField('BatchNorm1d');
-    this.setColour('#4DB6AC');
+    this.setColour(COLORS.LAYERS);
   }
 };
 
 Blockly.Blocks['sequential'] = {
   init: function() {
-    this.setColour('#78909C');
+    this.setColour(COLORS.MODEL);
     
     this.appendDummyInput().appendField('Sequential Model');
 
@@ -115,7 +116,7 @@ Blockly.Blocks['tanh'] = {
     this.setNextStatement(true);
     this.appendDummyInput()
         .appendField('Tanh');
-    this.setColour( '#80CBC4');
+    this.setColour(COLORS.ACTIVATIONS);
   }
 };
 
@@ -125,7 +126,7 @@ Blockly.Blocks['relu'] = {
     this.setNextStatement(true);
     this.appendDummyInput()
         .appendField('ReLU');
-    this.setColour('#80CBC4');
+    this.setColour(COLORS.ACTIVATIONS);
   }
 };
 
@@ -137,7 +138,7 @@ Blockly.Blocks['lsv_input'] = {
         .appendField(new FieldFilePicker("click_to_select_lsv.txt"), 'FILENAME');
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#FF8A65');
+    this.setColour(COLORS.INPUT);
   },
 
   onchange: function(event: any) {
@@ -166,7 +167,7 @@ Blockly.Blocks['special_character'] = {
         ]), "CHAR");
 
     this.setOutput(true, "String");
-    this.setColour('#5CA68D');
+    this.setColour(COLORS.TEXT);
     this.setTooltip("Returns a special character for text splitting.");
   }
 };
@@ -180,7 +181,7 @@ Blockly.Blocks['custom_code'] = {
 
     this.appendDummyInput()
         .appendField(codeField, 'CUSTOM_CODE');
-    this.setColour('#555555');
+    this.setColour(COLORS.CUSTOM_CODE);
   }
 };
 
@@ -192,7 +193,7 @@ Blockly.Blocks['build_tokenizer'] = {
         .appendField("build tokenizer from data");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#FFB74D');
+    this.setColour(COLORS.DATA_PROCESSING);
     this.setTooltip("Creates a Character Tokenizer object.");
   },
 
@@ -219,7 +220,7 @@ Blockly.Blocks['build_dataset'] = {
         .appendField("and context length");
 
     this.setOutput(true, "Array");
-    this.setColour('#FFB74D');
+    this.setColour(COLORS.DATA_PROCESSING);
     this.setTooltip("Converts text to numbers and creates sliding window (X, Y) tensors.");
   }
 };
@@ -252,7 +253,7 @@ Blockly.Blocks['split_dataset'] = {
 
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#FFB74D');
+    this.setColour(COLORS.DATA_PROCESSING);
   },
 
   onchange: function(event: any) {
@@ -327,7 +328,7 @@ Blockly.Blocks['kaiming_normalize'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
 
-    this.setColour('#7986CB');
+    this.setColour(COLORS.PARAM_INITIALIZATION);
     this.setTooltip("Adjusts initial weights based on activation functions (ReLU/Tanh) to prevent vanishing gradients.");
   }
 }
@@ -350,7 +351,7 @@ Blockly.Blocks['squash_logits'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
 
-    this.setColour('#7986CB');
+    this.setColour(COLORS.PARAM_INITIALIZATION);
     this.setTooltip("Squashes logits to avoid being overconfidently wrong");
   }
 }
@@ -363,7 +364,7 @@ Blockly.Blocks['no_grad'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
 
-    this.setColour('#7986CB');
+    this.setColour(COLORS.PARAM_INITIALIZATION);
   }
 }
 
@@ -392,7 +393,7 @@ Blockly.Blocks['training_loop'] = {
 
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#B19CD9');
+    this.setColour(COLORS.TRAINING);
     this.setTooltip("Trains the model using gradient descent with a learning rate that smoothly decays from Max LR to 0.");
   }
 };
@@ -411,7 +412,7 @@ Blockly.Blocks['generate_inference'] = {
 
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#5BCF7A');
+    this.setColour(COLORS.EVALUATION);
     this.setTooltip("Generates inferences from a trained model");
   }
 };
