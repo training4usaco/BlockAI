@@ -13,16 +13,16 @@ for i in range(${steps}):
         p.grad = None
     loss.backward()
 
-    lr = 0.08 if i < 100000 else 0.008
     for p in ${modelVar}.parameters():
         p.data -= lr * p.grad
 
     if i % 1000 == 0:
-        print(f'{i:7d}/{${steps}:7d}: {loss.item():.4f}')
+        print(f'{i:7d}/{${steps}:7d}: {loss.item():.4f} | lr: {lr}')
     ${modelVar}.loss_history.append(loss.item())
-        
-for layer in ${modelVar}.layers:
+print()
+
+for layer in sequential_model.layers:
     layer.training = False
-    
+
 `;
 };

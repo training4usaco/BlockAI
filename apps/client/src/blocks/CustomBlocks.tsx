@@ -489,17 +489,14 @@ pythonGenerator.forBlock['relu'] = function(_block: Blockly.Block) {
 };
 
 pythonGenerator.forBlock['sequential'] = function(block: any) {
-  // 1. Get Hyperparameters
   const blockSize = pythonGenerator.valueToCode(block, 'BLOCK_SIZE', 0) || '3';
   const nHidden = pythonGenerator.valueToCode(block, 'NUM_HIDDEN', 0) || '200';
   const embDim = pythonGenerator.valueToCode(block, 'EMB_DIM', 0) || '10';
   const reps = parseInt(pythonGenerator.valueToCode(block, 'REPS', 0) || '4');
   const tokenizer = pythonGenerator.valueToCode(block, 'TOKENIZER', 0) || 'tokenizer';
 
-  // 2. Define the Variable Name (e.g., 'model')
   const varname = block.data ?? 'model';
 
-  // 3. Inject the Class Definitions
   const linearClass = pythonGenerator.provideFunction_('Linear', Linear);
   const sequentialClass = pythonGenerator.provideFunction_('Sequential', Sequential);
 
