@@ -59,7 +59,13 @@ const BlocklyWorkspace: React.FC = () => {
 
             setLogs("🔄 Connecting to backend...\n");
 
-            const BACKEND_URL = "https://liualex54321--blockly-ml-backend-execute-python.modal.run";
+            const BACKEND_URL = import.meta.env.VITE_MODAL_API_URL;
+
+            if (!BACKEND_URL) {
+                setLogs("Error: Backend URL is not configured.\n");
+                setIsRunning(false);
+                return;
+            }
 
             const response = await fetch(BACKEND_URL, {
                 method: "POST",
