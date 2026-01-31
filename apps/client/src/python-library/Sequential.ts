@@ -5,7 +5,7 @@ class Sequential:
         self.tokenizer = tokenizer
         self.embedding_dim = embedding_dim
         self.context_len = context_len
-        self.lossi = []
+        self.loss_history = []
         
         vocab_size = tokenizer.vocab_size
         self.C = torch.randn((vocab_size, embedding_dim))

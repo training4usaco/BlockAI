@@ -42,6 +42,7 @@ const BlocklyWorkspace: React.FC = () => {
                 const importsCode =
                     'import torch\n' +
                     'import torch.nn.functional as F\n' +
+                    'import matplotlib.pyplot as plt\n' +
                     'import math\n';
 
                 const generatedCode = pythonGenerator.workspaceToCode(workspaceRef.current);
