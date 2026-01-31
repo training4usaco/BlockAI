@@ -17,7 +17,7 @@ for i in range(${steps}):
         p.data -= lr * p.grad
 
     if i % 1000 == 0:
-        print(f'{i:7d}/{${steps}:7d}: {loss.item():.4f} | lr: {lr}')
+        print(f'step: {i:7d}/{${steps}:7d} | loss: {loss.item():.4f} | lr: {lr}')
     ${modelVar}.loss_history.append(loss.item())
 print()
 
