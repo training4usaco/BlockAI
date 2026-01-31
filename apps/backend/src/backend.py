@@ -1,72 +1,155 @@
 import modal
-from fastapi import Request
-from pydantic import BaseModel
 import base64
 import os
 import io
-import contextlib
+import sys
 import shutil
+import threading
+import queue
+import time
+import traceback
+import json
 
-image = modal.Image.debian_slim().pip_install("torch", "matplotlib")
+image = modal.Image.debian_slim().pip_install(
+    "torch",
+    "matplotlib",
+    "fastapi[standard]"
+)
+
 app = modal.App("blockly-ml-backend")
 
-class ExecutionRequest(BaseModel):
-    code: str
-    files: dict[str, str]
+class QueueWriter:
+    def __init__(self, q):
+        self.q = q
 
-@app.function(image=image, cpu=2.0, memory=1024, timeout=60)
-@modal.web_endpoint(method="POST")
-async def execute_python(data: ExecutionRequest):
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    backend_root = os.path.dirname(script_dir)
+    def write(self, text):
+        if text:
+            self.q.put({"type": "log", "data": text})
 
-    SAVE_DIR = os.path.join(backend_root, "saved_files")
-    os.makedirs(SAVE_DIR, exist_ok=True)
+    def flush(self):
+        pass
 
-    created_files = []
+@app.function(
+    image=image,
+    cpu=4.0,
+    memory=4096,
+    timeout=3600,
+    env={"PYTHONUNBUFFERED": "1"}
+)
+@modal.fastapi_endpoint(method="POST", docs=True)
+def execute_python(data: dict):
 
-    try:
-        for filename, b64_content in data.files.items():
-            file_bytes = base64.b64decode(b64_content)
+    code = data.get("code", "")
+    files = data.get("files", {})
 
-            full_path = os.path.join(SAVE_DIR, filename)
+    q = queue.Queue()
 
-            if "/" in filename:
-                os.makedirs(os.path.dirname(full_path), exist_ok=True)
+    q.put({"type": "log", "data": "✅ Backend received request\n"})
+    q.put({"type": "log", "data": f"📝 Code: {len(code)} chars\n"})
+    q.put({"type": "log", "data": f"📁 Files: {len(files)}\n"})
 
-            with open(full_path, "wb") as f:
-                f.write(file_bytes)
-            created_files.append(full_path)
+    def worker():
+        SAVE_DIR = os.path.abspath("saved_files")
+        os.makedirs(SAVE_DIR, exist_ok=True)
 
-        output_buffer = io.StringIO()
-        image_b64 = None
+        original_stdout = sys.stdout
+        original_stderr = sys.stderr
 
-        with contextlib.redirect_stdout(output_buffer), contextlib.redirect_stderr(output_buffer):
+        try:
+            if files:
+                q.put({"type": "log", "data": f"📦 Processing {len(files)} file(s)...\n"})
+                for filename, b64_content in files.items():
+                    file_bytes = base64.b64decode(b64_content)
+                    full_path = os.path.join(SAVE_DIR, filename)
+
+                    if "/" in filename:
+                        os.makedirs(os.path.dirname(full_path), exist_ok=True)
+
+                    with open(full_path, "wb") as f:
+                        f.write(file_bytes)
+                    q.put({"type": "log", "data": f"  ✓ Saved {filename}\n"})
+
+            sys.stdout = QueueWriter(q)
+            sys.stderr = QueueWriter(q)
+
+            q.put({"type": "log", "data": "\n🚀 Starting execution...\n\n"})
+
+            original_dir = os.getcwd()
+            os.chdir(SAVE_DIR)
+
             try:
-                original_dir = os.getcwd()
-                os.chdir(SAVE_DIR)
+                exec(code, {'__name__': '__main__'})
 
-                try:
-                    exec(data.code, {'__name__': '__main__'})
-
-                    import matplotlib.pyplot as plt
-                    if plt.get_fignums():
-                        buf = io.BytesIO()
-                        plt.savefig(buf, format='png')
-                        buf.seek(0)
-                        image_b64 = base64.b64encode(buf.read()).decode('utf-8')
-                        plt.close()
-                finally:
-                    os.chdir(original_dir)
+                import matplotlib.pyplot as plt
+                if plt.get_fignums():
+                    q.put({"type": "log", "data": "\n📊 Generating plot...\n"})
+                    buf = io.BytesIO()
+                    plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+                    buf.seek(0)
+                    img_str = base64.b64encode(buf.read()).decode('utf-8')
+                    q.put({"type": "image", "data": img_str})
+                    plt.close('all')
+                    q.put({"type": "log", "data": "✅ Plot generated\n"})
 
             except Exception as e:
-                print(f"Runtime Error: {e}")
+                error_trace = traceback.format_exc()
+                q.put({"type": "log", "data": f"\n❌ Runtime Error:\n{error_trace}\n"})
+            finally:
+                os.chdir(original_dir)
 
-    finally:
-        if os.path.exists(SAVE_DIR):
-            shutil.rmtree(SAVE_DIR)
+        except Exception as system_error:
+            error_trace = traceback.format_exc()
+            q.put({"type": "log", "data": f"\n❌ System Error:\n{error_trace}\n"})
 
-    return {
-        "logs": output_buffer.getvalue(),
-        "image": image_b64
-    }
+        finally:
+            sys.stdout = original_stdout
+            sys.stderr = original_stderr
+
+            if os.path.exists(SAVE_DIR):
+                shutil.rmtree(SAVE_DIR)
+
+            q.put(None)
+
+    thread = threading.Thread(target=worker, daemon=True)
+    thread.start()
+
+    def event_stream():
+        message_count = 0
+        last_ping = time.time()
+
+        while True:
+            try:
+                item = q.get(timeout=0.1)
+
+                if item is None:
+                    yield f"data: {json.dumps({'type': 'complete', 'messages': message_count})}\n\n"
+                    break
+
+                message_count += 1
+                yield f"data: {json.dumps(item)}\n\n"
+                last_ping = time.time()
+
+            except queue.Empty:
+                if not thread.is_alive() and q.empty():
+                    yield f"data: {json.dumps({'type': 'complete', 'messages': message_count})}\n\n"
+                    break
+
+                if time.time() - last_ping > 2.0:
+                    yield f"data: {json.dumps({'type': 'ping', 'messages': message_count})}\n\n"
+                    last_ping = time.time()
+
+    from modal import web_endpoint
+    from starlette.responses import StreamingResponse
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
