@@ -19,7 +19,7 @@ for i in range(${steps}):
 
     if i % 1000 == 0:
         print(f'{i:7d}/{${steps}:7d}: {loss.item():.4f}')
-    ${modelVar}.lossi.append(loss.item())
+    ${modelVar}.loss_history.append(loss.item())
         
 for layer in ${modelVar}.layers:
     layer.training = False

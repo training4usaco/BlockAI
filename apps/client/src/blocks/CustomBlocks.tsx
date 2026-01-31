@@ -16,6 +16,7 @@ import {GenerateInference} from "../python-library/GenerateInference.ts";
 import {Sequential} from "../python-library/Sequential.ts";
 import {SquashLogits} from "../python-library/SquashLogits.ts";
 import {COLORS} from "../config/colors.ts";
+import {CalculateLoss} from "../python-library/CalculateLoss.ts";
 
 function getUniqueName(workspace: Blockly.Workspace, prefix: string) {
   let candidate = prefix;
@@ -408,7 +409,7 @@ Blockly.Blocks['generate_inference'] = {
         .appendField("number of samples");
 
     this.appendValueInput("MODEL")
-        .appendField("model");
+        .appendField("with model");
 
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
@@ -416,6 +417,43 @@ Blockly.Blocks['generate_inference'] = {
     this.setTooltip("Generates inferences from a trained model");
   }
 };
+
+Blockly.Blocks['calculate_loss'] = {
+  init: function() {
+    this.setInputsInline(true);
+    
+    this.appendDummyInput()
+        .appendField("Calculate Loss");
+
+    this.appendValueInput("DATASET")
+        .appendField("on dataset");
+
+    this.appendValueInput("MODEL")
+        .appendField("for model");
+
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(COLORS.EVALUATION);
+    this.setTooltip("Calculates the loss for a trained model on a certain dataset");
+  }
+}
+
+Blockly.Blocks['loss_graph'] = {
+  init: function() {
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    
+    this.appendDummyInput()
+        .appendField('Loss History');
+
+    this.appendValueInput("MODEL")
+        .appendField("for model");
+    
+    this.setColour(COLORS.VISUALIZATION);
+    this.setTooltip('Graphs the loss history during training');
+  }
+}
 
 pythonGenerator.forBlock['linear'] = function(_block: Blockly.Block, _generator, in_features: number = 100, out_features: number = 100) {
   const className = pythonGenerator.provideFunction_(
@@ -617,4 +655,21 @@ pythonGenerator.forBlock['generate_inference'] = function(block: any) {
   const model = pythonGenerator.valueToCode(block, 'MODEL', 0) || 'sequential_model';
   
   return GenerateInference(samples, model);
+}
+
+pythonGenerator.forBlock['calculate_loss'] = function(block: any) {
+  const dataset = pythonGenerator.valueToCode(block, 'DATASET', 0) || 'dataset';
+  const model = pythonGenerator.valueToCode(block, 'MODEL', 0) || 'sequential_model';
+
+  const functionName = pythonGenerator.provideFunction_(
+      'calculate_loss',
+      CalculateLoss
+  );
+  
+  return `${functionName}(${dataset}, ${model}, '${dataset}')\n\n`;
+}
+
+pythonGenerator.forBlock['loss_graph'] = function(block: any) {
+  const model = pythonGenerator.valueToCode(block, 'MODEL', 0) || 'sequential_model';
+  return `plt.plot(torch.arange(0, len(${model}.loss_history)), ${model}.loss_history)\n\n`
 }

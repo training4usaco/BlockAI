@@ -189,16 +189,17 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
                             }
                         },
                     }
-                }
+                },
+                { kind: 'block', type: 'calculate_loss' }
             ]
         },
 
         {
             kind: 'category',
             name: 'Visualization',
-            colour: COLORS.EVALUATION,
+            colour: COLORS.VISUALIZATION,
             contents: [
-                { kind: 'block', type: 'block' }
+                { kind: 'block', type: 'loss_graph' }
             ]
         },
         

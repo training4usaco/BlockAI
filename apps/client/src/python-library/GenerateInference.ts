@@ -14,6 +14,6 @@ export const GenerateInference = (numSamples: string, modelVar: string) => {
                 break
 
     print(''.join(${modelVar}.tokenizer.itos[i] for i in out))
-    
-    ` 
+
+` 
 }
