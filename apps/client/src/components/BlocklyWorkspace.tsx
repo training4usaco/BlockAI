@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import Editor from '@monaco-editor/react';
+
 import * as Blockly from 'blockly/core';
 import { pythonGenerator } from 'blockly/python';
 import * as libraryBlocks from 'blockly/blocks';
@@ -184,6 +186,32 @@ const BlocklyWorkspace: React.FC = () => {
         };
     }, []);
 
+    const [editorHeight, setEditorHeight] = useState('200px');
+
+    const [isShiftHeld, setIsShiftHeld] = useState(false);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Shift') {
+                setIsShiftHeld(true);
+            }
+        };
+
+        const handleKeyUp = (e: KeyboardEvent) => {
+            if (e.key === 'Shift') {
+                setIsShiftHeld(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        };
+    }, []);
+
     return (
         <div style={{ display: 'flex', height: '100vh', width: '100vw' }}>
 
@@ -268,29 +296,35 @@ const BlocklyWorkspace: React.FC = () => {
                     </div>
                 </div>
 
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '5px',
-                    marginTop: '10px'
-                }}>
+                <div style={{ flexShrink: 0 }}>
                     <h3 style={{ margin: 0 }}>Generated Python</h3>
-                    <pre style={{
-                        fontFamily: 'monospace',
-                        fontSize: '12px',
-                        color: '#aaa',
-                        backgroundColor: '#111',
-                        padding: '10px',
-                        borderRadius: '4px',
-                        border: '1px solid #333',
-                        margin: 0,
-                        overflow: 'visible',
-                        minHeight: '100px', 
-                        wordBreak: 'break-all',
-                        whiteSpace: 'pre-wrap'
-                    }}>
-                        {generatedCode}
-                    </pre>
+                    <div style={{ border: '1px solid #333', borderRadius: '4px', overflow: 'hidden' }}>
+                        <Editor
+                            height={editorHeight}
+                            defaultLanguage="python"
+                            theme="vs-dark"
+                            value={generatedCode}
+                            onMount={(editor) => {
+                                editor.onDidChangeModelContent(() => {
+                                    const contentHeight = editor.getContentHeight();
+                                    setEditorHeight(`${Math.max(200, contentHeight)}px`);
+                                });
+                            }}
+                            options={{
+                                readOnly: true,
+                                minimap: { enabled: false },
+                                scrollBeyondLastLine: false,
+                                automaticLayout: true,
+                                wordWrap: 'off',
+                                wrappingStrategy: 'simple',
+                                scrollbar: {
+                                    vertical: 'hidden',
+                                    horizontal: 'visible',
+                                    handleMouseWheel: isShiftHeld
+                                }
+                            }}
+                        />
+                    </div>
                 </div>
             </div>
         </div>
