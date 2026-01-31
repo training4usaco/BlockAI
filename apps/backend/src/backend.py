@@ -16,7 +16,7 @@ image = modal.Image.debian_slim().pip_install(
     "fastapi[standard]"
 )
 
-app = modal.App("blockly-ml-backend")
+app = modal.App("block-ai-backend")
 
 class QueueWriter:
     def __init__(self, q):
