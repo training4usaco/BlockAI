@@ -511,7 +511,7 @@ pythonGenerator.forBlock['sequential'] = function(block: any) {
       let code = '';
 
       if (layerBlock.type === 'linear') {
-        code = pythonGenerator.forBlock['linear'](
+        code = (pythonGenerator.forBlock['linear'] as any)(
             layerBlock,
             pythonGenerator,
             currentInDim,
@@ -520,7 +520,7 @@ pythonGenerator.forBlock['sequential'] = function(block: any) {
         currentInDim = nHidden;
       }
       else if (layerBlock.type === 'batch_norm_1d') {
-        code = pythonGenerator.forBlock['batch_norm_1d'](
+        code = (pythonGenerator.forBlock['batch_norm_1d'] as any)(
             layerBlock,
             pythonGenerator,
             currentInDim
