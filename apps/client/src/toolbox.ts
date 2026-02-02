@@ -62,26 +62,18 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
         },
         {
             kind: 'category',
-            name: 'Model',
+            name: 'Structural',
             colour: COLORS.MODEL,
             contents: [
                 {
                     kind: 'block',
-                    type: 'sequential',
+                    type: 'sequential_model',
                     inputs: {
                         BLOCK_SIZE: {
                             shadow: {
                                 type: "math_number",
                                 fields: {
                                     NUM: 3,
-                                }
-                            }
-                        },
-                        REPS: {
-                            shadow: {
-                                type: "math_number",
-                                fields: {
-                                    NUM: 4,
                                 }
                             }
                         },
@@ -98,6 +90,20 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
                                 type: "math_number",
                                 fields: {
                                     NUM: 10,
+                                }
+                            }
+                        }
+                    },
+                },
+                {
+                    kind: 'block',
+                    type: 'repeater',
+                    inputs: {
+                        REPS: {
+                            shadow: {
+                                type: "math_number",
+                                fields: {
+                                    NUM: 4,
                                 }
                             }
                         }

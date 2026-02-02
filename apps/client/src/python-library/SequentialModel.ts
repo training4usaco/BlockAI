@@ -1,5 +1,5 @@
-export const Sequential = `
-class Sequential(nn.Module):
+export const SequentialModel = `
+class SequentialModel(nn.Module):
     def __init__(self, layers, tokenizer, embedding_dim, context_len):
         self.layers = layers
         self.tokenizer = tokenizer
