@@ -3,8 +3,6 @@ import { pythonGenerator } from 'blockly/python';
 import { FieldMultilineInput } from '@blockly/field-multilineinput';
 import { FieldFilePicker } from '../fields/FieldFilePicker';
 import {CharTokenizer} from "../python-library/CharTokenizer.ts";
-import {Linear} from "../python-library/Linear.ts";
-import {BatchNorm1d} from "../python-library/BatchNorm1d.ts";
 import {Tanh} from "../python-library/activations/Tanh.ts";
 import {ReLU} from "../python-library/activations/ReLU.ts";
 import {SplitDataset} from "../python-library/SplitDataset.ts";
@@ -17,6 +15,11 @@ import {Sequential} from "../python-library/Sequential.ts";
 import {SquashLogits} from "../python-library/SquashLogits.ts";
 import {COLORS} from "../config/colors.ts";
 import {CalculateLoss} from "../python-library/CalculateLoss.ts";
+import {TokenEmbedding} from "../python-library/layers/TokenEmbedding.ts";
+import {PositionEmbedding} from "../python-library/layers/PositionEmbedding.ts";
+import { Linear } from '../python-library/layers/Linear.ts';
+import {BatchNorm1d} from "../python-library/layers/BatchNorm1d.ts";
+import {Flatten} from "../python-library/layers/Flatten.ts";
 
 function getUniqueName(workspace: Blockly.Workspace, prefix: string) {
   let candidate = prefix;
@@ -53,6 +56,39 @@ Blockly.Blocks['linear'] = {
   }
 };
 
+Blockly.Blocks['token_embedding'] = {
+  init: function() {
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.appendDummyInput()
+        .appendField('Token Embedding');
+    this.setColour(COLORS.LAYERS);
+    this.setTooltip('Token embedding');
+  }
+};
+
+Blockly.Blocks['position_embedding'] = {
+  init: function() {
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.appendDummyInput()
+        .appendField('Position Embedding');
+    this.setColour(COLORS.LAYERS);
+    this.setTooltip('Position embedding. Assumes inputs are of dimension (batch_size, context_len).');
+  }
+};
+
+Blockly.Blocks['flatten'] = {
+  init: function() {
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.appendDummyInput()
+        .appendField('Flatten');
+    this.setColour(COLORS.LAYERS);
+    this.setTooltip('Combines all dimensions (except Batch) into one long vector.');
+  }
+}
+
 Blockly.Blocks['batch_norm_1d'] = {
   init: function() {
     this.setPreviousStatement(true);
@@ -87,6 +123,10 @@ Blockly.Blocks['sequential'] = {
     
     this.appendValueInput("TOKENIZER")
         .appendField("tokenizer");
+
+    this.appendStatementInput('INIT_LAYERS')
+        .setCheck(['Layers', 'Activations'])
+        .appendField('single repeat layers');
     
     this.appendStatementInput('LAYERS')
         .setCheck(['Layers', 'Activations'])
@@ -472,6 +512,33 @@ pythonGenerator.forBlock['batch_norm_1d'] = function(_block: Blockly.Block, _gen
   return `${className}(${n})`;
 };
 
+pythonGenerator.forBlock['token_embedding'] = function(_block: Blockly.Block, _generator, vocabSize: string = 'tokenizer.vocab_size', embDim: number = 10) {
+  const className = pythonGenerator.provideFunction_(
+      'TokenEmbedding',
+      TokenEmbedding
+  );
+
+  return `${className}(${vocabSize}, ${embDim})\n`;
+};
+
+pythonGenerator.forBlock['position_embedding'] = function(_block: Blockly.Block, _generator, blockSize: number = 8, embDim: number = 10) {
+  const className = pythonGenerator.provideFunction_(
+      'PositionEmbedding',
+      PositionEmbedding
+  );
+
+  return `${className}(${blockSize}, ${embDim})\n`;
+};
+
+pythonGenerator.forBlock['flatten'] = function(_block: Blockly.Block, _generator) {
+  const className = pythonGenerator.provideFunction_(
+      'Flatten',
+      Flatten
+  );
+
+  return `${className}()\n`;
+};
+
 pythonGenerator.forBlock['tanh'] = function(_block: Blockly.Block) {
   const className = pythonGenerator.provideFunction_(
       'Tanh',
@@ -499,10 +566,40 @@ pythonGenerator.forBlock['sequential'] = function(block: any) {
 
   const linearClass = pythonGenerator.provideFunction_('Linear', Linear);
   const sequentialClass = pythonGenerator.provideFunction_('Sequential', Sequential);
-
+  
   let currentInDim = `${embDim} * ${blockSize}`;
   const rows: string[] = [];
 
+  let initLayerBlock = block.getInputTargetBlock('INIT_LAYERS');
+  const initRowParts: string[] = [];
+  while(initLayerBlock) {
+    let code = '';
+    if (initLayerBlock.type === 'batch_norm_1d') {
+      code = (pythonGenerator.forBlock['batch_norm_1d'] as any)(
+          initLayerBlock,
+          pythonGenerator,
+          embDim
+      )?.toString() ?? `ERROR WITH BATCH NORM BLOCK`;
+    }
+    else if (initLayerBlock.type === 'token_embedding') {
+      code = (pythonGenerator.forBlock['token_embedding'] as any)(
+          initLayerBlock,
+          pythonGenerator,
+          `${tokenizer}.vocab_size`,
+          embDim
+      )?.toString() ?? `ERROR WITH TOKEN EMBEDDING BLOCK`;
+    }
+    else {
+      const genFunc = pythonGenerator.forBlock[initLayerBlock.type];
+      if (genFunc) code = genFunc(initLayerBlock, pythonGenerator)?.toString() ?? "UNKNOWN BLOCK";
+    }
+
+    if (code) initRowParts.push(code.trim());
+    initLayerBlock = initLayerBlock.getNextBlock();
+  }
+
+  if (initRowParts.length > 0) rows.push(initRowParts.join(', '));
+  
   for(let i = 0; i < reps; ++i) {
     let layerBlock = block.getInputTargetBlock('LAYERS');
     const rowParts: string[] = [];
@@ -516,7 +613,7 @@ pythonGenerator.forBlock['sequential'] = function(block: any) {
             pythonGenerator,
             currentInDim,
             nHidden
-        )?.toString() ?? `Linear(${currentInDim}, ${nHidden})`;
+        )?.toString() ?? `ERROR WITH LINEAR BLOCK`;
         currentInDim = nHidden;
       }
       else if (layerBlock.type === 'batch_norm_1d') {
@@ -524,7 +621,7 @@ pythonGenerator.forBlock['sequential'] = function(block: any) {
             layerBlock,
             pythonGenerator,
             currentInDim
-        )?.toString() ?? `BatchNorm1d(${currentInDim})`;
+        )?.toString() ?? `ERROR WITH BATCH NORM BLOCK`;
       }
       else {
         const genFunc = pythonGenerator.forBlock[layerBlock.type];

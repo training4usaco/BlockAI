@@ -1,5 +1,5 @@
 export const BatchNorm1d = 
-    "class BatchNorm1d:\n" +
+    "class BatchNorm1d(nn.Module):\n" +
     "    def __init__(self, dim, eps=1e-5, momentum=0.1):\n" +
     "        self.eps = eps\n" +
     "        self.momentum = momentum\n" +
