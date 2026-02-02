@@ -1,5 +1,4 @@
 import * as Blockly from 'blockly/core';
-import {PythonGenerator, pythonGenerator} from 'blockly/python';
 import { FieldMultilineInput } from '@blockly/field-multilineinput';
 import { FieldFilePicker } from '../fields/FieldFilePicker';
 import {CharTokenizer} from "../python-library/CharTokenizer.ts";
