@@ -19,6 +19,7 @@ import {PositionEmbedding} from "../python-library/layers/PositionEmbedding.ts";
 import { Linear } from '../python-library/layers/Linear.ts';
 import {BatchNorm1d} from "../python-library/layers/BatchNorm1d.ts";
 import {Flatten} from "../python-library/layers/Flatten.ts";
+import {pythonGenerator} from "blockly/python";
 
 function getUniqueName(workspace: Blockly.Workspace, prefix: string) {
   let candidate = prefix;
