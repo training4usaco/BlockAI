@@ -46,6 +46,9 @@ export const toolbox: Blockly.utils.toolbox.ToolboxDefinition = {
             contents: [
                 { kind: 'block', type: 'linear' },
                 { kind: 'block', type: 'batch_norm_1d' },
+                { kind: 'block', type: 'token_embedding' },
+                { kind: 'block', type: 'position_embedding' },
+                { kind: 'block', type: 'flatten' },
             ],
         },
         {
